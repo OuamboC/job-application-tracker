@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from database import create_db_and_tables
-from routers import applications
+from database import create_db_and_tables       # import create_db_and_tables to run on startup 
+from routers import applications                # import the applications router
 
 
 
@@ -16,4 +16,4 @@ async def lifespan(app: FastAPI):
 # Pass lifespan to app so FastAPI knows what to do on start/stop
 app = FastAPI(lifespan = lifespan)
 
-app.include_router(applications.router)
+app.include_router(applications.router) # plug the applications routes into the main app

@@ -4,7 +4,7 @@ from sqlmodel import select
 from models import Application, ApplicationCreate, ApplicationPublic, ApplicationUpdate
 from database import SessionDep
 
-router = APIRouter()  # replace @app with @router
+router = APIRouter()  # creates a mini app that gets plugged into the main app in main.py ( Replaced @app with @router)
 
 # Step 10 : Create with ApplicationCreate and return an ApplicationPublic
 # We receive in the request an ApplicationCreate data model, and from it, we create an Application table model
