@@ -14,8 +14,8 @@ from auth.security import get_password_hash, create_access_token, authenticate_u
 
 router = APIRouter()  # creates a mini app that gets plugged into the main app in main.py
 
-# register a new user - hashes password before storing in DB
-@router.post("/register", response_model=UserPublic)
+# register a new user : hashes password before storing in DB
+@router.post("/register", response_model=UserPublic, tags=["Identity & Access Management"])
 def create_user(user: UserCreate, session: SessionDep):
     hashed_password = get_password_hash(user.password)  # hash before storing
     db_user = User.model_validate(user, update={"hashed_password": hashed_password})
@@ -24,8 +24,8 @@ def create_user(user: UserCreate, session: SessionDep):
     session.refresh(db_user)    # refresh with DB generated values (e.g: id)
     return db_user
 
-# login endpoint - validates credentials and returns JWT token
-@router.post("/token")
+# login endpoint : validates credentials and returns JWT token
+@router.post("/token", tags=["Identity & Access Management"])
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     session: SessionDep,
@@ -43,8 +43,8 @@ async def login_for_access_token(
     )
     return Token(access_token=access_token, token_type="bearer")
 
-# returns the current logged in user's profile - requires valid JWT token
-@router.get("/users/me", response_model=UserPublic)
+# returns the current logged in user's profile : requires valid JWT token
+@router.get("/users/me", response_model=UserPublic, tags=["Identity & Access Management"])
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)],  # injects current user
 ) -> User:

@@ -18,7 +18,7 @@ router = APIRouter()  # creates a mini app that gets plugged into the main app i
 # Then we return the same table model Application as is from the function. 
 # But as we declare the response_model with ApplicationPublic data model, FastAPI will use ApplicationPublic to validate and serialize the data
 # PROTECTED, only logged in users can create applications
-@router.post("/applications", response_model = ApplicationPublic)
+@router.post("/applications", response_model=ApplicationPublic, tags=["Job Applications"])
 def create_application(
     application: ApplicationCreate, 
     session: SessionDep,
@@ -34,7 +34,7 @@ def create_application(
 # We will use response_model = list[ApplicationPublic] to ensure that the data is validated and serialized correctly
 # Extension : Filter by status
 # PUBLIC, anyone can read applications
-@router.get("/applications", response_model = list[ApplicationPublic])
+@router.get("/applications", response_model=list[ApplicationPublic], tags=["Job Applications"])
 def read_applications(
     session: SessionDep,                                           # Injected DB session
     offset: int = 0,                                               # Skip N applications (e.g: offset = 5 skips first 5)
@@ -54,7 +54,7 @@ def read_applications(
 # Step 12: Read One Application with ApplicationPublic
 # We can read a single application
 # PUBLIC, anyone can read a single application
-@router.get("/applications/{id}", response_model = ApplicationPublic)
+@router.get("/applications/{id}", response_model=ApplicationPublic, tags=["Job Applications"])
 def read_application(id: int, session: SessionDep):
     application = session.get(Application, id)
     if not application:                                                           # Check if application do not exist
@@ -67,7 +67,7 @@ def read_application(id: int, session: SessionDep):
 # To do it, we will use exclude_unset = True. This is the main trick
 # Then we will use application_db.sqlmodel_update(application_data) to update the application_db with the data from application_data
 # PROTECTED, only logged in users can update applications
-@router.patch("/applications/{id}", response_model = ApplicationPublic)
+@router.patch("/applications/{id}", response_model=ApplicationPublic, tags=["Job Applications"])
 def update_application(
     id: int, 
     application: ApplicationUpdate, 
@@ -86,7 +86,7 @@ def update_application(
 
 # Step 14: Delete an application
 # PROTECTED, only logged in users can delete applications
-@router.delete("/applications/{id}")
+@router.delete("/applications/{id}", tags=["Job Applications"])
 def delete_application(
     id: int, 
     session: SessionDep,
