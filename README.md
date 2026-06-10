@@ -38,6 +38,17 @@ job_application_tracker/
 | PATCH | /applications/{id} | Yes | Update application |
 | DELETE | /applications/{id} | Yes | Delete application |
 
+## Security Requirements
+
+### Password
+- Minimum 8 characters
+- At least one uppercase letter
+- At least one number
+- At least one special character (!@#$%^&*)
+
+### Email
+- Must be a valid email format (example@domain.com)
+
 ## How to run
 ```bash
 git clone https://github.com/OuamboC/job-application-tracker
