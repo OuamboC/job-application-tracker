@@ -5,12 +5,12 @@ A REST API to track job applications built with FastAPI, SQLModel and SQLite.
 Features CRUD operations, pagination, status filtering and JWT authentication.
 
 ## Tech Stack
-- **FastAPI** - web framework
-- **SQLModel** - ORM and data validation
-- **SQLite** - database
-- **JWT** - authentication
-- **pwdlib** - password hashing
-- **python-dotenv** - environment variables management
+- **FastAPI** , web framework
+- **SQLModel** , ORM and data validation
+- **SQLite** , database
+- **JWT** , authentication
+- **pwdlib** , password hashing
+- **python-dotenv** , environment variables management
 
 ## Project Structure
 ```
@@ -33,14 +33,14 @@ job_application_tracker/
 | POST | /token | No | Login and get JWT token |
 | GET | /users/me | Yes | Get current logged in user |
 | POST | /applications | Yes | Create application |
-| GET | /applications | No | Get all applications |
-| GET | /applications/{id} | No | Get one application |
-| PATCH | /applications/{id} | Yes | Update application |
-| DELETE | /applications/{id} | Yes | Delete application |
+| GET | /applications | Yes | Get all own applications |
+| GET | /applications/{id} | Yes | Get one own application |
+| PATCH | /applications/{id} | Yes | Update own application |
+| DELETE | /applications/{id} | Yes | Delete own application |
 
-## Security Requirements
+## Security
 
-### Password
+### Password Requirements
 - Minimum 8 characters
 - At least one uppercase letter
 - At least one number
@@ -48,6 +48,11 @@ job_application_tracker/
 
 ### Email
 - Must be a valid email format (example@domain.com)
+
+### Object Level Authorization
+- All application endpoints are protected against IDOR/BOLA attacks (OWASP API Security Top 10)
+- Users can only access, update and delete their own applications
+- Requests for applications belonging to other users return 404 to prevent resource enumeration
 
 ## How to run
 ```bash
@@ -85,10 +90,8 @@ Once running, visit:
 - Pagination and status filtering
 - Environment variables management with python-dotenv
 - Project structure following SOLID principles
-
+- Identifying and patching IDOR/BOLA vulnerability (OWASP API Security Top 10)
 
 ## Live Demo
 API is deployed and live at:
 https://job-application-tracker-0rig.onrender.com/docs
-
-
