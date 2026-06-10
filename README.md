@@ -87,3 +87,8 @@ Once running, visit:
 - Project structure following SOLID principles
 
 
+## Live Demo
+API is deployed and live at:
+https://job-application-tracker-0rig.onrender.com/docs
+
+
