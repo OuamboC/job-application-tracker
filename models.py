@@ -25,6 +25,7 @@ class Application(ApplicationBase, table = True):
     # Field(primary_key = True) tells SQLModel that the id is the primary key in the SQL database
     # We use int | None for the primary key field so that in Python code we can create object without an id(id = None), assuming the DB will generate it when saving
     id: int | None = Field(default = None, primary_key = True)
+    user_id: int = Field(foreign_key="user.id")  # links application to its owner
 
 # Step 3 : Create ApplicationPublic, the public data model(This is the one that will be returned to the clients of the API) 
 # It has the same fields as ApplicationBase

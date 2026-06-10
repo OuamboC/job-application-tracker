@@ -2,7 +2,7 @@
 from typing import Annotated
 
 # 2. Third party
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import select
 
 # 3. Local imports
@@ -22,30 +22,31 @@ router = APIRouter()  # creates a mini app that gets plugged into the main app i
 def create_application(
     application: ApplicationCreate, 
     session: SessionDep,
-    current_user: Annotated[User, Depends(get_current_active_user)],  # not used directly, just enforces authentication
+    current_user: Annotated[User, Depends(get_current_active_user)],  # injects current logged in user
 ):
-    db_application = Application.model_validate(application)
+    db_application = Application.model_validate(application, update={"user_id": current_user.id})  # binds application to current user
     session.add(db_application)                             # Stage application to be saved
     session.commit()                                        # Save to DB
-    session.refresh(db_application)                         # Refresh with DB generated values(e.g: id)
+    session.refresh(db_application)                         # Refresh with DB generated values(e.g, id)
     return db_application
 
 # Step 11: Read Applications with ApplicationPublic
 # We will use response_model = list[ApplicationPublic] to ensure that the data is validated and serialized correctly
-# Extension : Filter by status
-# PUBLIC, anyone can read applications
+# Extension , Filter by status
+# PROTECTED, only logged in users can read their own applications
 @router.get("/applications", response_model=list[ApplicationPublic], tags=["Job Applications"])
 def read_applications(
     session: SessionDep,                                           # Injected DB session
-    offset: int = 0,                                               # Skip N applications (e.g: offset = 5 skips first 5)
+    current_user: Annotated[User, Depends(get_current_active_user)],  # injects current logged in user
+    offset: int = 0,                                               # Skip N applications (e.g, offset = 5 skips first 5)
     limit: Annotated[int, Query(le = 100)] = 100,                  # Max applications to return, capped at 100
     status: str | None = None,                                     # Optional filter by status
     ):
-    query = select(Application)                                    # SELECT * FROM Application
+    query = select(Application).where(Application.user_id == current_user.id)  # only return applications belonging to current user
     if status:                                                     # Check if status is provided
         query = query.where(Application.status == status)          # Filter by status
     applications = session.exec(                                   # Executes the query
-        query                                                      # Filter by status
+        query                                                      # Filter by status and owner
         .offset(offset)                                            # Skip N rows
         .limit(limit)                                              # Take only N rows
         ).all()                                                    # Return all results as a list
@@ -53,12 +54,21 @@ def read_applications(
 
 # Step 12: Read One Application with ApplicationPublic
 # We can read a single application
-# PUBLIC, anyone can read a single application
+# PROTECTED, only owner can read their application, prevents IDOR/BOLA attack
 @router.get("/applications/{id}", response_model=ApplicationPublic, tags=["Job Applications"])
-def read_application(id: int, session: SessionDep):
-    application = session.get(Application, id)
-    if not application:                                                           # Check if application do not exist
-        raise HTTPException(status_code = 404, detail = "Application not found")  # Raise the following message
+def read_application(
+    id: int, 
+    session: SessionDep,
+    current_user: Annotated[User, Depends(get_current_active_user)],  # injects current logged in user
+):
+    application = session.exec(
+        select(Application).where(
+            Application.id == id,
+            Application.user_id == current_user.id  # prevents IDOR, only owner can access
+        )
+    ).first()
+    if not application:                                                           # Check if application do not exist or belongs to another user
+        raise HTTPException(status_code=404, detail="Application not found")      # Raise the following message, 404 even if exists to prevent enumeration
     return application                                                            # Return single application
 
 # Step 13: Update an Application with ApplicationUpdate
@@ -66,17 +76,22 @@ def read_application(id: int, session: SessionDep):
 # And in the code, we get a dict with all data sent by the client, *only the data sent by the client*, excluding any values that would be there just for being the default values.
 # To do it, we will use exclude_unset = True. This is the main trick
 # Then we will use application_db.sqlmodel_update(application_data) to update the application_db with the data from application_data
-# PROTECTED, only logged in users can update applications
+# PROTECTED, only owner can update their application, prevents IDOR/BOLA attack
 @router.patch("/applications/{id}", response_model=ApplicationPublic, tags=["Job Applications"])
 def update_application(
     id: int, 
     application: ApplicationUpdate, 
     session: SessionDep,
-    current_user: Annotated[User, Depends(get_current_active_user)],  # not used directly, just enforces authentication
+    current_user: Annotated[User, Depends(get_current_active_user)],  # injects current logged in user
 ):
-    application_db = session.get(Application, id)
-    if not application_db:                                                          # Check if application_db do not exist
-        raise HTTPException(status_code = 404, detail = "Application not found")    # Raise the following message
+    application_db = session.exec(
+        select(Application).where(
+            Application.id == id,
+            Application.user_id == current_user.id  # prevents IDOR, only owner can update
+        )
+    ).first()
+    if not application_db:                                                          # Check if application_db do not exist or belongs to another user
+        raise HTTPException(status_code=404, detail="Application not found")        # Raise the following message
     application_data = application.model_dump(exclude_unset = True)
     application_db.sqlmodel_update(application_data)
     session.add(application_db)
@@ -85,16 +100,21 @@ def update_application(
     return application_db
 
 # Step 14: Delete an application
-# PROTECTED, only logged in users can delete applications
+# PROTECTED, only owner can delete their application, prevents IDOR/BOLA attack
 @router.delete("/applications/{id}", tags=["Job Applications"])
 def delete_application(
     id: int, 
     session: SessionDep,
-    current_user: Annotated[User, Depends(get_current_active_user)],  # not used directly, just enforces authentication
+    current_user: Annotated[User, Depends(get_current_active_user)],  # injects current logged in user
 ):
-    application = session.get(Application, id)
-    if not application:                                                             # Check if application do not exist
-        raise HTTPException(status_code = 404, detail = "Application not found")    # Raise the following message
+    application = session.exec(
+        select(Application).where(
+            Application.id == id,
+            Application.user_id == current_user.id  # prevents IDOR, only owner can delete
+        )
+    ).first()
+    if not application:                                                             # Check if application do not exist or belongs to another user
+        raise HTTPException(status_code=404, detail="Application not found")        # Raise the following message
     session.delete(application)                                                     # Delete (stage) application
     session.commit()                                                                # Save to DB
     return {"ok": True}
