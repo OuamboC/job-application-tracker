@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from database import create_db_and_tables       # import create_db_and_tables to run on startup 
-from routers import applications                # import the applications router
+from routers import applications, auth  # import the applications and auth routers
 
 
 
@@ -17,3 +17,4 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan = lifespan)
 
 app.include_router(applications.router) # plug the applications routes into the main app
+app.include_router(auth.router) # plug the auth routes into the main app

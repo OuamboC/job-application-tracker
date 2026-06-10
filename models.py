@@ -1,5 +1,5 @@
-from typing import Annotated
 from sqlmodel import Field, SQLModel
+from pydantic import BaseModel
 
 # Step 1 : Create the base ApplicationBase - the base class (It has all the fields that are shared by all the models) 
 class ApplicationBase(SQLModel):
@@ -58,3 +58,34 @@ class ApplicationUpdate(ApplicationBase):
     country: str | None = None
     city: str | None = None
     notes: str | None = None
+
+
+# User table model
+class User(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    username: str = Field(index=True)   # required, used to login
+    email: str = Field(index=True)      # required, must be unique
+    hashed_password: str                # never store plain passwords
+    disabled: bool = False              # False = active, True = banned
+
+# what client sends to register
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str                       # plain password, will be hashed before storing
+
+# what client sees - never return hashed_password
+class UserPublic(BaseModel):
+    id: int
+    username: str
+    email: str
+    disabled: bool
+
+# what server returns after successful login
+class Token(BaseModel):
+    access_token: str                   # the JWT token string
+    token_type: str                     # always "bearer"
+
+# data extracted from JWT token
+class TokenData(BaseModel):
+    username: str | None = None         # username stored inside the token
