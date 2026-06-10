@@ -26,7 +26,7 @@ class Application(ApplicationBase, table = True):
     # We use int | None for the primary key field so that in Python code we can create object without an id(id = None), assuming the DB will generate it when saving
     id: int | None = Field(default = None, primary_key = True)
 
-# Step 3 : Create ApplicationPublic - the public data model(This is the one that will be returned to the clients of the API) 
+# Step 3 : Create ApplicationPublic, the public data model(This is the one that will be returned to the clients of the API) 
 # It has the same fields as ApplicationBase
 # It also re-declared id: int. By doing this, we are making a contract with the API clients, so that they can always expect the id to there and to be an int (it will never be None)
 # All the fields in ApplicationPublic are the same as in ApplicationBase, with id declared as int(not None)
@@ -38,7 +38,7 @@ class ApplicationPublic(ApplicationBase):
 class ApplicationCreate(ApplicationBase):
     pass # no extra fields, inherits everything from ApplicationBase
 
-# Step 5 : ApplicationUpdate - the data model to update an application
+# Step 5 : ApplicationUpdate, the data model to update an application
 # This data model is somewhat special, it has all the same fields that would be needed to create a new application, but all fields are optional(they all have a default value)...
 # This way, when we update an application, we can send just the fields that we want to update.
 # Because all the fields actually change (the type now includes None and they now have a default value of None), we need to redeclare them

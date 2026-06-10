@@ -25,7 +25,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30 # token expires after 30 minutes
 # recommended() automatically picks the strongest hashing algorithm
 password_hash = PasswordHash.recommended()
 
-# pre-computed hash used when user doesn't exist - prevents timing attacks
+# pre-computed hash used when user doesn't exist, prevents timing attacks
 DUMMY_HASH = password_hash.hash("dummypassword")
 
 # tells FastAPI where the login endpoint is
@@ -40,7 +40,7 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return password_hash.hash(password)
 
-# checks username exists and password is correct - returns user or False
+# checks username exists and password is correct, returns user or False
 def authenticate_user(session, username: str, password: str):
     user = session.exec(select(User).where(User.username == username)).first()
     if not user:
