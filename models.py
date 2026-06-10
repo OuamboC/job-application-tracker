@@ -1,5 +1,6 @@
 from sqlmodel import Field, SQLModel
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, field_validator
+import re
 
 # Step 1 : Create the base ApplicationBase - the base class (It has all the fields that are shared by all the models) 
 class ApplicationBase(SQLModel):
@@ -71,8 +72,20 @@ class User(SQLModel, table=True):
 # what client sends to register
 class UserCreate(BaseModel):
     username: str
-    email: str
+    email: EmailStr                     # validates email format automatically
     password: str                       # plain password, will be hashed before storing
+
+    @field_validator("password")
+    def password_strength(cls, value):
+        if len(value) < 8:
+            raise ValueError("Password must be at least 8 characters")
+        if not re.search(r"[A-Z]", value):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not re.search(r"[0-9]", value):
+            raise ValueError("Password must contain at least one number")
+        if not re.search(r"[!@#$%^&*]", value):
+            raise ValueError("Password must contain at least one special character (!@#$%^&*)")
+        return value
 
 # what client sees - never return hashed_password
 class UserPublic(BaseModel):
